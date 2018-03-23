@@ -59,6 +59,7 @@ func main() {
 		builder.SetInsertPoint(block, block.FirstInstruction())
 
 		exprBody := expr.Codegen(module, builder)
+		builder.SetInsertPointAtEnd(block)
 		builder.CreateRet(exprBody)
 
 		module.Dump()

@@ -58,3 +58,21 @@ func (defn *DefineExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.V
 	global.SetInitializer(val)
 	return global
 }
+
+type LambdaExpr struct {
+	args []string
+	body Expr
+}
+
+func (lexpr *LambdaExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
+	argTypes := []llvm.Type{}
+	for i := 0; i < len(lexpr.args); i++ {
+		argTypes = append(argTypes, llvm.DoubleType())
+	}
+	prototype := llvm.FunctionType(llvm.DoubleType(), argTypes, false)
+	fn := llvm.AddFunction(module, "_lambda", prototype)
+	block := llvm.AddBasicBlock(fn, "")
+	builder.SetInsertPoint(block, block.FirstInstruction())
+	builder.CreateRet(lexpr.body.Codegen(module, builder))
+	return fn
+}

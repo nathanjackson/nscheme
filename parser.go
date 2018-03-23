@@ -47,6 +47,18 @@ func Parse(offset int, types []TokenType, toks []string) (expr Expr, end int, er
 			defexpr.name = toks[offset+1]
 			defexpr.expression, end, err = Parse(offset+2, types, toks)
 			expr = &defexpr
+		case Lambda.String():
+			args := []string{}
+			var i int
+			for i = offset + 1; types[i] != CloseParen; i++ {
+				if types[i] == Identifier {
+					args = append(args, toks[i])
+				}
+			}
+			var lambdaExpr LambdaExpr
+			lambdaExpr.args = args
+			lambdaExpr.body, end, err = Parse(i+1, types, toks)
+			expr = &lambdaExpr
 		}
 	}
 
