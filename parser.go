@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 var symbolToOperator = map[string]Operator{
 	"+": AddOp,
@@ -34,6 +37,18 @@ func Parse(offset int, types []TokenType, toks []string) (expr Expr, end int, er
 		nexpr := NumExpr(tmp)
 		expr = &nexpr
 		end = offset
+	case Keyword:
+		switch toks[offset] {
+		case Define.String():
+			if types[offset+1] != Identifier {
+				err = fmt.Errorf("define must be followed by an identifier")
+			}
+			var defexpr DefineExpr
+			defexpr.name = toks[offset+1]
+			defexpr.expression, end, err = Parse(offset+2, types, toks)
+			expr = &defexpr
+		}
 	}
+
 	return
 }

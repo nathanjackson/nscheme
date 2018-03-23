@@ -39,6 +39,9 @@ func main() {
 			toks = append(toks, lexer.Token())
 		}
 
+		fmt.Printf("%v\n", tt)
+		fmt.Printf("%v\n", toks)
+
 		if err := lexer.Err(); err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
@@ -58,12 +61,14 @@ func main() {
 		exprBody := expr.Codegen(module, builder)
 		builder.CreateRet(exprBody)
 
-		ee, err := llvm.NewExecutionEngine(module)
+		module.Dump()
+
+		/*ee, err := llvm.NewExecutionEngine(module)
 		if err != nil {
 			fmt.Printf("Could not create ExecutionEngine: %v\n", err)
 		}
 		fun := ee.FindFunction("expr")
 		result := ee.RunFunction(fun, []llvm.GenericValue{})
-		fmt.Printf("%v\n", result.Float(llvm.DoubleType()))
+		fmt.Printf("%v\n", result.Float(llvm.DoubleType()))*/
 	}
 }

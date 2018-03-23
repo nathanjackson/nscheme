@@ -15,6 +15,12 @@ const (
 	Identifier
 	Number
 	BinOp
+	Keyword
+)
+
+const (
+	Define KeywordType = iota
+	Lambda
 )
 
 func (tt TokenType) String() string {
@@ -24,17 +30,30 @@ func (tt TokenType) String() string {
 		"Identifier",
 		"Number",
 		"BinOp",
+		"Keyword",
 	}
 
-	if tt < OpenParen || tt > BinOp {
+	if tt < OpenParen || tt > Keyword {
 		return "Unknown"
 	}
 
 	return names[tt]
 }
 
+func (kt KeywordType) String() string {
+	names := [...]string{
+		"define",
+		"lambda",
+	}
+	if kt < Define || kt > Lambda {
+		return "Unknown"
+	}
+	return names[kt]
+}
+
 type (
-	TokenType int
+	TokenType   int
+	KeywordType int
 
 	Lexer struct {
 		bufrd *bufio.Reader
@@ -51,12 +70,6 @@ func NewLexer(rd io.Reader) (lexer *Lexer) {
 	}
 }
 
-func check(err error) {
-	if err != nil {
-		panic(err)
-	}
-}
-
 func peekRuneOrPanic(rd *bufio.Reader) (p rune) {
 	tmp, err := rd.Peek(1)
 	if len(tmp) == 0 {
@@ -65,6 +78,31 @@ func peekRuneOrPanic(rd *bufio.Reader) (p rune) {
 		panic(err)
 	}
 	p = rune(tmp[0])
+	return
+}
+
+func checkBufferForStr(str string, rd *bufio.Reader) (hasIt bool) {
+	hasIt = false
+	tmp, _ := rd.Peek(len(str))
+	if str == string(tmp) {
+		hasIt = true
+	}
+	return
+}
+
+func readKeyword(rd *bufio.Reader) (keyword string, err error) {
+	err = fmt.Errorf("not a keyword")
+	validKeywords := []KeywordType{
+		Define,
+		Lambda,
+	}
+	for _, kw := range validKeywords {
+		if checkBufferForStr(kw.String(), rd) {
+			rd.Discard(len(kw.String()))
+			keyword = kw.String()
+			err = nil
+		}
+	}
 	return
 }
 
@@ -151,6 +189,10 @@ func (lexer *Lexer) Scan() (result bool) {
 		lexer.tt = CloseParen
 		result = true
 		lexer.bufrd.Discard(1)
+	} else if sym, err := readKeyword(lexer.bufrd); err == nil {
+		lexer.tok = sym
+		lexer.tt = Keyword
+		result = true
 	} else if id, err := readIdentifier(lexer.bufrd); err == nil {
 		lexer.tok = id
 		lexer.tt = Identifier

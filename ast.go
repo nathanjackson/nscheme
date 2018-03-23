@@ -46,3 +46,15 @@ func (binop *BinOpExpr) Codegen(module llvm.Module, builder llvm.Builder) (op ll
 	}
 	return
 }
+
+type DefineExpr struct {
+	name       string
+	expression Expr
+}
+
+func (defn *DefineExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
+	val := defn.expression.Codegen(module, builder)
+	global := llvm.AddGlobal(module, val.Type(), defn.name)
+	global.SetInitializer(val)
+	return global
+}
