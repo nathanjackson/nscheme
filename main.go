@@ -18,8 +18,9 @@ func main() {
 	run := true
 	rd := bufio.NewReader(os.Stdin)
 
+	module := context.NewModule("top")
+
 	for run {
-		module := context.NewModule("top")
 		builder := context.NewBuilder()
 
 		tt := []TokenType{}

@@ -52,11 +52,17 @@ type DefineExpr struct {
 	expression Expr
 }
 
-func (defn *DefineExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
+func (defn *DefineExpr) Codegen(module llvm.Module, builder llvm.Builder) (result llvm.Value) {
 	val := defn.expression.Codegen(module, builder)
-	global := llvm.AddGlobal(module, val.Type(), defn.name)
-	global.SetInitializer(val)
-	return global
+	if !val.IsAFunction().IsNil() {
+		val.SetName(defn.name)
+		result = val
+	} else {
+		global := llvm.AddGlobal(module, val.Type(), defn.name)
+		global.SetInitializer(val)
+		result = global
+	}
+	return
 }
 
 type LambdaExpr struct {
@@ -85,15 +91,15 @@ func (lexpr *LambdaExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.
 type IdentifierExpr string
 
 func (id *IdentifierExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
-	// Attempt to retrieve the parameter from the parent value (a function).
+	variableName := string(*id)
+	// Attempt to retrieve the parameter from the current basic block's parent.
 	block := builder.GetInsertBlock()
 	fn := block.Parent()
 	for _, arg := range fn.Params() {
-		if arg.Name() == string(*id) {
+		if arg.Name() == variableName {
 			return arg
 		}
 	}
 	// Otherwise, we try to find a global variable.
-	// Or fail.
-	panic("bad identifier")
+	return module.NamedGlobal(variableName)
 }
