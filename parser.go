@@ -60,6 +60,10 @@ func Parse(offset int, types []TokenType, toks []string) (expr Expr, end int, er
 			lambdaExpr.body, end, err = Parse(i+1, types, toks)
 			expr = &lambdaExpr
 		}
+	case Identifier:
+		id := IdentifierExpr(toks[offset])
+		expr = &id
+		end = offset
 	}
 
 	return

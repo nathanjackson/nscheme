@@ -62,6 +62,7 @@ func (defn *DefineExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.V
 type LambdaExpr struct {
 	args []string
 	body Expr
+	fn   llvm.Value
 }
 
 func (lexpr *LambdaExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
@@ -70,9 +71,29 @@ func (lexpr *LambdaExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.
 		argTypes = append(argTypes, llvm.DoubleType())
 	}
 	prototype := llvm.FunctionType(llvm.DoubleType(), argTypes, false)
-	fn := llvm.AddFunction(module, "_lambda", prototype)
-	block := llvm.AddBasicBlock(fn, "")
+	lexpr.fn = llvm.AddFunction(module, "_lambda", prototype)
+	for i, arg := range lexpr.args {
+		lexpr.fn.Param(i).SetName(arg)
+	}
+	block := llvm.AddBasicBlock(lexpr.fn, "")
 	builder.SetInsertPoint(block, block.FirstInstruction())
 	builder.CreateRet(lexpr.body.Codegen(module, builder))
-	return fn
+	return lexpr.fn
+}
+
+// IdentifierExpr is a node that references a variable or constant.
+type IdentifierExpr string
+
+func (id *IdentifierExpr) Codegen(module llvm.Module, builder llvm.Builder) llvm.Value {
+	// Attempt to retrieve the parameter from the parent value (a function).
+	block := builder.GetInsertBlock()
+	fn := block.Parent()
+	for _, arg := range fn.Params() {
+		if arg.Name() == string(*id) {
+			return arg
+		}
+	}
+	// Otherwise, we try to find a global variable.
+	// Or fail.
+	panic("bad identifier")
 }
