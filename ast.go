@@ -1,4 +1,4 @@
-package main
+package nscheme
 
 import (
 	"llvm.org/llvm/bindings/go/llvm"

@@ -8,6 +8,8 @@ import (
 	"strings"
 
 	"llvm.org/llvm/bindings/go/llvm"
+
+	"github.com/nathanjackson/nscheme"
 )
 
 func main() {
@@ -23,7 +25,7 @@ func main() {
 	for run {
 		builder := context.NewBuilder()
 
-		tt := []TokenType{}
+		tt := []nscheme.TokenType{}
 		toks := []string{}
 
 		fmt.Print("nscheme> ")
@@ -33,7 +35,7 @@ func main() {
 			break
 		}
 
-		lexer := NewLexer(strings.NewReader(line))
+		lexer := nscheme.NewLexer(strings.NewReader(line))
 
 		for lexer.Scan() {
 			tt = append(tt, lexer.TokenType())
@@ -48,7 +50,7 @@ func main() {
 			continue
 		}
 
-		expr, _, err := Parse(0, tt, toks)
+		expr, _, err := nscheme.Parse(0, tt, toks)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 			continue
